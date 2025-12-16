@@ -13,7 +13,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/snaps")
-public class Snaps {
+public class SnapResource {
 
     @Inject
     SnapService snapService;
