@@ -17,6 +17,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -41,7 +43,7 @@ public class FlickrSync {
             &user_id=%s\
             &has_geo=1\
             &extras=date_taken,geo,url_t,url_l\
-            &min_taken_date=2025-01-01\
+            &min_taken_date=2013-01-01\
             &format=json\
             &nojsoncallback=1""";
 
@@ -82,7 +84,12 @@ public class FlickrSync {
                         p.secret,
                         p.server,
                         parseDouble(p.latitude),
-                        parseDouble(p.longitude)
+                        parseDouble(p.longitude),
+                        p.thumbNailWidth,
+                        p.thumbNailHeight,
+                        p.imageWidth,
+                        p.imageHeight,
+                        parseLocalDateTime(p.dateTaken)
                 ))
                 .collect(Collectors.toList());
     }
@@ -93,6 +100,14 @@ public class FlickrSync {
     }
     private static Double parseDouble(String s) {
         try { return s == null || s.isBlank() ? null : Double.parseDouble(s); } catch (Exception e) { return null; }
+    }
+
+    private static LocalDateTime parseLocalDateTime(String s) {
+        try {
+            return s == null || s.isBlank() ? null : LocalDateTime.parse(s, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private List<Photo> parsePhotos(String json) {
@@ -128,5 +143,17 @@ public class FlickrSync {
         @JsonProperty("server") String server;
         @JsonProperty("latitude") String latitude;
         @JsonProperty("longitude") String longitude;
+        @JsonProperty("datetaken")
+        String dateTaken;
+        @JsonProperty("width_t")
+        Integer thumbNailWidth;
+        @JsonProperty("height_t")
+        Integer thumbNailHeight;
+        @JsonProperty("width_l")
+        Integer imageWidth;
+        @JsonProperty("height_l")
+        Integer imageHeight;
+
+
     }
 }

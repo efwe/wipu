@@ -64,5 +64,49 @@ public class SnapTest {
                 .body("[0].location[1]", is(13.404954F));
     }
 
+    @Test
+    void snapsCanBeFilteredByBoundingBox() {
+        // Berlin
+        Snap snap1 = new Snap();
+        snap1.setLocation(new Location(13.404954, 52.520008));
+        snap1.setTitle("Berlin.jpg");
+        snap1.setSnapId(1L);
+
+        // Munich
+        Snap snap2 = new Snap();
+        snap2.setLocation(new Location(11.581981, 48.135125));
+        snap2.setTitle("Munich.jpg");
+        snap2.setSnapId(2L);
+
+        mongoClient.getDatabase(databaseName)
+                .getCollection(Snap.SNAP_COLLECTION_NAME, Snap.class)
+                .insertOne(snap1);
+        mongoClient.getDatabase(databaseName)
+                .getCollection(Snap.SNAP_COLLECTION_NAME, Snap.class)
+                .insertOne(snap2);
+
+        // Bounding box for Berlin area: approx 13.0, 52.4 to 13.8, 52.6
+        given()
+                .when().get("/snaps?bbox=13.0,52.4,13.8,52.6")
+                .then()
+                .statusCode(200)
+                .body("size()", is(1))
+                .body("[0].title", is("Berlin.jpg"));
+
+        // Bounding box for Germany
+        given()
+                .when().get("/snaps?bbox=5.0,47.0,15.0,55.0")
+                .then()
+                .statusCode(200)
+                .body("size()", is(2));
+
+        // Bounding box for nowhere
+        given()
+                .when().get("/snaps?bbox=0.0,0.0,1.0,1.0")
+                .then()
+                .statusCode(200)
+                .body("size()", is(0));
+    }
+
 
 }

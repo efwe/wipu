@@ -8,6 +8,8 @@ import org.bson.codecs.pojo.annotations.BsonId;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
+import java.time.LocalDateTime;
+
 /**
  * flickr.photo.search result example:
  * {
@@ -76,12 +78,34 @@ public class Snap {
     @JsonUnwrapped
     private Location location;
 
+    @BsonProperty("thumbNailWidth")
+    @JsonProperty(value = "thumbNailWidth")
+    private Integer thumbNailWidth;
+
+    @BsonProperty("thumbNailHeight")
+    @JsonProperty(value = "thumbNailHeight")
+    private Integer thumbNailHeight;
+
+    @BsonProperty("imageWidth")
+    @JsonProperty(value = "imageWidth")
+    private Integer imageWidth;
+
+    @BsonProperty("imageHeight")
+    @JsonProperty(value = "imageHeight")
+    private Integer imageHeight;
+
+    @BsonProperty("dateTaken")
+    @JsonProperty(value = "dateTaken")
+    private LocalDateTime dateTaken;
+
+
     public Snap() {
         // no-arg constructor for frameworks
     }
 
     public Snap(String id, String title, Long snapId, String secret, String server,
-                Double latitude, Double longitude) {
+                Double latitude, Double longitude, Integer thumbNailWidth, Integer thumbNailHeight,
+                Integer imageWidth, Integer imageHeight, LocalDateTime dateTaken) {
         this.id = id;
         this.title = title;
         this.snapId = snapId;
@@ -90,6 +114,11 @@ public class Snap {
         if (latitude != null && longitude != null) {
             this.location = new Location(longitude, latitude);
         }
+        this.thumbNailWidth = thumbNailWidth;
+        this.thumbNailHeight = thumbNailHeight;
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        this.dateTaken = dateTaken;
     }
 
     public String getId() {
@@ -138,6 +167,46 @@ public class Snap {
 
     public void setLocation(Location location) {
         this.location = location;
+    }
+
+    public Integer getThumbNailWidth() {
+        return thumbNailWidth;
+    }
+
+    public void setThumbNailWidth(Integer thumbNailWidth) {
+        this.thumbNailWidth = thumbNailWidth;
+    }
+
+    public Integer getThumbNailHeight() {
+        return thumbNailHeight;
+    }
+
+    public void setThumbNailHeight(Integer thumbNailHeight) {
+        this.thumbNailHeight = thumbNailHeight;
+    }
+
+    public Integer getImageWidth() {
+        return imageWidth;
+    }
+
+    public void setImageWidth(Integer imageWidth) {
+        this.imageWidth = imageWidth;
+    }
+
+    public Integer getImageHeight() {
+        return imageHeight;
+    }
+
+    public void setImageHeight(Integer imageHeight) {
+        this.imageHeight = imageHeight;
+    }
+
+    public LocalDateTime getDateTaken() {
+        return dateTaken;
+    }
+
+    public void setDateTaken(LocalDateTime dateTaken) {
+        this.dateTaken = dateTaken;
     }
 
     /**
