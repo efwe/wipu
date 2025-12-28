@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  * Fetches photos from Flickr and stores them in MongoDB.
- * @RestClient tutorial looked promising, but in the end it does not help too much
+ * RestClient tutorial looked promising, but in the end it does not help too much
  */
 @ApplicationScoped
 public class FlickrSync {
@@ -58,20 +58,21 @@ public class FlickrSync {
     public Uni<Void> sync() {
         String searchUrl = FLICKR_SEARCH_URL.formatted(flickrConfig.apiKey(), flickrConfig.userId());
 
-        HttpClient http = HttpClient.newHttpClient();
-        HttpRequest req = HttpRequest.newBuilder(URI.create(searchUrl))
-                .timeout(Duration.ofSeconds(20))
-                .GET()
-                .build();
+        try (HttpClient http = HttpClient.newHttpClient()) {
+            HttpRequest req = HttpRequest.newBuilder(URI.create(searchUrl))
+                    .timeout(Duration.ofSeconds(20))
+                    .GET()
+                    .build();
 
-        return Uni.createFrom()
-                .completionStage(() -> http.sendAsync(req, HttpResponse.BodyHandlers.ofString()))
-                .onItem().transform(HttpResponse::body)
-                .onItem().transform(this::parsePhotos)
-                .onItem().transform(this::mapToSnaps)
-                .onItem().transformToUni(snaps -> snaps.isEmpty()
-                        ? Uni.createFrom().voidItem()
-                        : getCollection().insertMany(snaps).replaceWithVoid());
+            return Uni.createFrom()
+                    .completionStage(() -> http.sendAsync(req, HttpResponse.BodyHandlers.ofString()))
+                    .onItem().transform(HttpResponse::body)
+                    .onItem().transform(this::parsePhotos)
+                    .onItem().transform(this::mapToSnaps)
+                    .onItem().transformToUni(snaps -> snaps.isEmpty()
+                            ? Uni.createFrom().voidItem()
+                            : getCollection().insertMany(snaps).replaceWithVoid());
+        }
     }
 
     private List<Snap> mapToSnaps(List<Photo> photos) {
