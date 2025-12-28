@@ -8,7 +8,13 @@
 podman save -o wipu-quarkus.tar localhost/wipu:1.0
 
 scp wipu-quarkus.tar fw@hilda.123k.org:/home/fw/wipu/images
-ssh fw@hilda.123k.org podman load -i /home/fw/wipu/images/wipu-quarkus.tar
+# end of story for now - please continue
+# loading the image
+# stop running container and throw it away
+# create new container from new image
+# restart the whole pod?!
+# all not clear :)
+# ssh fw@hilda.123k.org podman load -i /home/fw/wipu/images/wipu-quarkus.tar
   #cd /opt/images
   #podman load -i wipu-quarkus.tar
   #podman run --rm -p 8080:8080 \
