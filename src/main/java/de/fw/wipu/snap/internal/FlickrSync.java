@@ -53,26 +53,24 @@ public class FlickrSync {
     private final ObjectMapper mapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    
-    
+
     public Uni<Void> sync() {
         String searchUrl = FLICKR_SEARCH_URL.formatted(flickrConfig.apiKey(), flickrConfig.userId());
 
-        try (HttpClient http = HttpClient.newHttpClient()) {
-            HttpRequest req = HttpRequest.newBuilder(URI.create(searchUrl))
-                    .timeout(Duration.ofSeconds(20))
-                    .GET()
-                    .build();
+        HttpClient http = HttpClient.newHttpClient();
+        HttpRequest req = HttpRequest.newBuilder(URI.create(searchUrl))
+                .timeout(Duration.ofSeconds(20))
+                .GET()
+                .build();
 
-            return Uni.createFrom()
-                    .completionStage(() -> http.sendAsync(req, HttpResponse.BodyHandlers.ofString()))
-                    .onItem().transform(HttpResponse::body)
-                    .onItem().transform(this::parsePhotos)
-                    .onItem().transform(this::mapToSnaps)
-                    .onItem().transformToUni(snaps -> snaps.isEmpty()
-                            ? Uni.createFrom().voidItem()
-                            : getCollection().insertMany(snaps).replaceWithVoid());
-        }
+        return Uni.createFrom()
+                .completionStage(() -> http.sendAsync(req, HttpResponse.BodyHandlers.ofString()))
+                .onItem().transform(HttpResponse::body)
+                .onItem().transform(this::parsePhotos)
+                .onItem().transform(this::mapToSnaps)
+                .onItem().transformToUni(snaps -> snaps.isEmpty()
+                        ? Uni.createFrom().voidItem()
+                        : getCollection().insertMany(snaps).replaceWithVoid());
     }
 
     private List<Snap> mapToSnaps(List<Photo> photos) {
@@ -95,12 +93,24 @@ public class FlickrSync {
                 .collect(Collectors.toList());
     }
 
-    private static String nullToEmpty(String s) { return s == null ? "" : s; }
-    private static Long parseLongSafe(String s) {
-        try { return s == null ? null : Long.parseLong(s); } catch (NumberFormatException e) { return null; }
+    private static String nullToEmpty(String s) {
+        return s == null ? "" : s;
     }
+
+    private static Long parseLongSafe(String s) {
+        try {
+            return s == null ? null : Long.parseLong(s);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private static Double parseDouble(String s) {
-        try { return s == null || s.isBlank() ? null : Double.parseDouble(s); } catch (Exception e) { return null; }
+        try {
+            return s == null || s.isBlank() ? null : Double.parseDouble(s);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static LocalDateTime parseLocalDateTime(String s) {
@@ -128,22 +138,30 @@ public class FlickrSync {
     // DTOs for Flickr response
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class PhotosResponse {
-        @JsonProperty("photos") Photos photos;
+        @JsonProperty("photos")
+        Photos photos;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class Photos {
-        @JsonProperty("photo") List<Photo> photo;
+        @JsonProperty("photo")
+        List<Photo> photo;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class Photo {
-        @JsonProperty("id") String id;
-        @JsonProperty("title") String title;
-        @JsonProperty("secret") String secret;
-        @JsonProperty("server") String server;
-        @JsonProperty("latitude") String latitude;
-        @JsonProperty("longitude") String longitude;
+        @JsonProperty("id")
+        String id;
+        @JsonProperty("title")
+        String title;
+        @JsonProperty("secret")
+        String secret;
+        @JsonProperty("server")
+        String server;
+        @JsonProperty("latitude")
+        String latitude;
+        @JsonProperty("longitude")
+        String longitude;
         @JsonProperty("datetaken")
         String dateTaken;
         @JsonProperty("width_t")
