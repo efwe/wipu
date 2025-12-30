@@ -111,14 +111,15 @@ public class Snap {
         this.snapId = snapId;
         this.secret = secret;
         this.server = server;
-        if (latitude != null && longitude != null) {
-            this.location = new Location(longitude, latitude);
-        }
         this.thumbNailWidth = thumbNailWidth;
         this.thumbNailHeight = thumbNailHeight;
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
         this.dateTaken = dateTaken;
+
+        if (latitude != null && longitude != null) {
+            this.location = new Location(longitude, latitude);
+        }
     }
 
     public String getId() {

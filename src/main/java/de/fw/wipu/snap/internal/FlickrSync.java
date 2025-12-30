@@ -37,13 +37,17 @@ public class FlickrSync {
     String databaseName;
 
 
+    /**
+     * This is all not good yet. The maximum 'per_page' is 500 - so whenever we reach that threshold on flickr we would
+     * have to start a new request.
+     *  - &has_geo=1 >> limits the per_page to 250
+     */
     private static final String FLICKR_SEARCH_URL = """
             https://www.flickr.com/services/rest/?method=flickr.photos.search\
             &api_key=%s\
             &user_id=%s\
-            &has_geo=1\
+            &per_page=500\
             &extras=date_taken,geo,url_t,url_l\
-            &min_taken_date=2013-01-01\
             &format=json\
             &nojsoncallback=1""";
 
@@ -55,23 +59,40 @@ public class FlickrSync {
 
 
     public Uni<Void> sync() {
+
+
         String searchUrl = FLICKR_SEARCH_URL.formatted(flickrConfig.apiKey(), flickrConfig.userId());
 
-        HttpClient http = HttpClient.newHttpClient();
-        HttpRequest req = HttpRequest.newBuilder(URI.create(searchUrl))
-                .timeout(Duration.ofSeconds(20))
-                .GET()
-                .build();
 
-        return Uni.createFrom()
-                .completionStage(() -> http.sendAsync(req, HttpResponse.BodyHandlers.ofString()))
-                .onItem().transform(HttpResponse::body)
-                .onItem().transform(this::parsePhotos)
-                .onItem().transform(this::mapToSnaps)
-                .onItem().transformToUni(snaps -> snaps.isEmpty()
-                        ? Uni.createFrom().voidItem()
-                        : getCollection().insertMany(snaps).replaceWithVoid());
+        Uni<Void> drop;
+        Uni<HttpResponse<String>> fetchPhotos;
+        try (HttpClient http = HttpClient.newHttpClient()) {
+            HttpRequest request = HttpRequest.newBuilder(URI.create(searchUrl))
+                    .timeout(Duration.ofSeconds(20))
+                    .GET()
+                    .build();
+
+            // prepare a cleanup - we don't have a delta-mechanism for now
+            drop = mongoClient.getDatabase(databaseName)
+                    .getCollection(Snap.SNAP_COLLECTION_NAME)
+                    .drop();
+
+            // prepare the actual fetch
+            fetchPhotos = Uni.createFrom()
+                    .completionStage(http.sendAsync(request, HttpResponse.BodyHandlers.ofString()));
+
+            // drop, fetch, map and save
+            return drop.chain(() -> fetchPhotos)
+                    .onItem().transform(HttpResponse::body)
+                    .onItem().transform(this::parsePhotos)
+                    .onItem().transform(this::mapToSnaps)
+                    .onItem().transformToUni(snaps -> snaps.isEmpty()
+                            ? Uni.createFrom().voidItem()
+                            : getCollection().insertMany(snaps).replaceWithVoid());
+        }
+
     }
+
 
     private List<Snap> mapToSnaps(List<Photo> photos) {
         return photos.stream()
@@ -90,6 +111,7 @@ public class FlickrSync {
                         p.imageHeight,
                         parseLocalDateTime(p.dateTaken)
                 ))
+                .filter(s -> s.getLocation()!=null)
                 .collect(Collectors.toList());
     }
 
