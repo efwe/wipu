@@ -1,6 +1,8 @@
 package de.fw.wipu.geohash;
 
+import de.fw.wipu.geohash.internal.GeoHashCronJob;
 import de.fw.wipu.geohash.internal.GeoHashWorker;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -19,6 +21,9 @@ public class GeoHashResource {
 
     @Inject
     GeoHashWorker geoHashWorker;
+
+    @Inject
+    GeoHashCronJob geoHashCronJob;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -66,4 +71,17 @@ public class GeoHashResource {
     private Response badRequest(String message) {
         return Response.status(Response.Status.BAD_REQUEST).entity(message).build();
     }
+
+    /**
+     * for testing purposes only
+     */
+    @GET
+    @Path("/email")
+    @RolesAllowed("infra")
+    public Response email() {
+        geoHashCronJob.runJob();
+        return Response.ok("").build();
+    }
+
+
 }
