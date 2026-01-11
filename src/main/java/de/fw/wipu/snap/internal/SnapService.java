@@ -29,10 +29,10 @@ public class SnapService {
     public Uni<List<Snap>> findByBoundingBox(BoundingBox bbox) {
         return getCollection().find(
                 Filters.geoWithinBox("location",
-                        bbox.getSouthWest().getCoordinates().get(0),
-                        bbox.getSouthWest().getCoordinates().get(1),
-                        bbox.getNorthEast().getCoordinates().get(0),
-                        bbox.getNorthEast().getCoordinates().get(1)
+                        bbox.getSouthWest().getLon(),
+                        bbox.getSouthWest().getLat(),
+                        bbox.getNorthEast().getLon(),
+                        bbox.getNorthEast().getLat()
                 )
         ).collect().asList();
     }

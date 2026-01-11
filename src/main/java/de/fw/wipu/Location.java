@@ -14,14 +14,15 @@ public class Location {
 
     @JsonIgnore
     @BsonProperty("type")
-    private String type = "Point";
+    private final String type = "Point";
 
     @JsonIgnore
     @BsonProperty("coordinates")
-    private List<Double> coordinates;
+    private final List<Double> coordinates;
 
     // No-arg constructor required by MongoDB PojoCodec
     public Location() {
+        this.coordinates = new ArrayList<>();
     }
 
     public Location(Double lon, Double lat) {
@@ -42,16 +43,92 @@ public class Location {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public List<Double> getCoordinates() {
         return coordinates;
     }
+    
+    @JsonIgnore
+    @BsonIgnore
+    public Double getLon() {
+        return coordinates.getFirst();
+    }
+    
+    public Double getLat() {
+        return coordinates.get(1);
+    }
 
-    public void setCoordinates(List<Double> coordinates) {
-        this.coordinates = coordinates;
+    public Location getGraticule() {
+        if (this.coordinates == null || this.coordinates.size() < 2) {
+            return new Location(0.0, 0.0);
+        }
+        return new Location(Math.floor(this.coordinates.get(0)), Math.floor(this.coordinates.get(1)));
+    }
+
+    /**
+     * Returns a new Location north of this one by the given distance in kilometers.
+     */
+    public Location north(int km) {
+        return moveByKilometers(km, 0.0);
+    }
+
+    /**
+     * Returns a new Location east of this one by the given distance in kilometers.
+     */
+    public Location east(int km) {
+        return moveByKilometers(km, 90.0);
+    }
+
+    /**
+     * Returns a new Location south of this one by the given distance in kilometers.
+     */
+    public Location south(int km) {
+        return moveByKilometers(km, 180.0);
+    }
+
+    /**
+     * Returns a new Location west of this one by the given distance in kilometers.
+     */
+    public Location west(int km) {
+        return moveByKilometers(km, 270.0);
+    }
+
+    /**
+     * Move this location along a great-circle by the given distance (km) and bearing (degrees, 0=north).
+     */
+    private Location moveByKilometers(double distanceKm, double bearingDeg) {
+        if (coordinates == null || coordinates.size() < 2) {
+            throw new IllegalStateException("Location has no coordinates");
+        }
+
+        double lon1 = Math.toRadians(getLon());
+        double lat1 = Math.toRadians(getLat());
+        double bearing = Math.toRadians(bearingDeg);
+
+        double distanceMeters = distanceKm * 1000.0;
+        double angularDistance = distanceMeters / EARTH_RADIUS_METERS;
+
+        double sinLat1 = Math.sin(lat1);
+        double cosLat1 = Math.cos(lat1);
+        double sinAd = Math.sin(angularDistance);
+        double cosAd = Math.cos(angularDistance);
+
+        double lat2 = Math.asin(
+                sinLat1 * cosAd +
+                cosLat1 * sinAd * Math.cos(bearing)
+        );
+
+        double lon2 = lon1 + Math.atan2(
+                Math.sin(bearing) * sinAd * cosLat1,
+                cosAd - sinLat1 * Math.sin(lat2)
+        );
+
+        // Normalize longitude to [-180, 180)
+        double lon2Deg = Math.toDegrees(lon2);
+        lon2Deg = ((lon2Deg + 540.0) % 360.0) - 180.0;
+
+        double lat2Deg = Math.toDegrees(lat2);
+
+        return new Location(lon2Deg, lat2Deg);
     }
 
     /**
@@ -66,10 +143,11 @@ public class Location {
             return -1;
         }
 
-        double lon1 = a.getCoordinates().get(0);
-        double lat1 = a.getCoordinates().get(1);
-        double lon2 = b.getCoordinates().get(0);
-        double lat2 = b.getCoordinates().get(1);
+
+        double lon1 = a.getLon();
+        double lat1 = a.getLat();
+        double lon2 = b.getLon();
+        double lat2 = b.getLat();
 
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);

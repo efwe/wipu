@@ -10,11 +10,15 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class GeoHashCronJob {
 
+    private static final Location SCHWABACH = new Location(11.020650, 49.329109);
+    private static final Location CHECINY = new Location(20.465209, 50.799461);
+    private static final List<Location> LOCATIONS = List.of(SCHWABACH, CHECINY);
     private static final Logger LOG = Logger.getLogger(GeoHashCronJob.class);
 
     @Inject
@@ -27,34 +31,22 @@ public class GeoHashCronJob {
     public void runJob() {
         LOG.info("Running GeoHashCronJob");
         try {
-            LocalDate today = LocalDate.now();
-
-            // Graticule 50, 20
-            Location target1 = new Location(20.0, 50.0);
-            GeoHash hash1 = geoHashWorker.hashPointFor(50, 20, today);
-            checkAndSend(hash1, target1, "50/20");
-
-            // Graticule 49, 11
-            Location target2 = new Location(11.0, 49.0);
-            GeoHash hash2 = geoHashWorker.hashPointFor(49, 11, today);
-            checkAndSend(hash2, target2, "49/11");
+            LOCATIONS.forEach(l -> {
+                LocalDate today = LocalDate.now();
+                GeoHash geoHash = geoHashWorker.hashPointFor(l.getLat().intValue(), l.getLon().intValue(), today);
+                Set<Location> locations = geoHashWorker.hashPointsWithinReach(l, geoHash.getLocation(), 25);
+                if (!locations.isEmpty()) {
+                    // Note: only _we_ know here that there may be only one GeoHash for now (because of the 25km limit)
+                    Location hashPoint = locations.iterator().next();
+                    mailer.send(Mail.withText("fw@123k.org",
+                            String.format("GeoHash for %s is near!", today),
+                            String.format("There are GeoHashes near today. Please go fast to https://123k.org/geohashing/%s/%s/.\n\n Sincerely your's WIPU", hashPoint.getGraticule().getLat().intValue(), hashPoint.getGraticule().getLon().intValue())));
+                }
+            });
 
         } catch (Exception e) {
             LOG.error("Failed to run GeoHashCronJob", e);
         }
     }
 
-    private void checkAndSend(GeoHash hash, Location target, String label) {
-        long distance = Location.distance(hash.getLocation(), target);
-        LOG.infof("Distance to %s hashpoint is %d meters", label, distance);
-
-        if (distance < 25000) {
-            String recipient = "fw@123k.org";
-            mailer.send(Mail.withText(recipient,
-                    String.format("GeoHash for %s is near!", label),
-                    String.format("The GeoHash for %s today is at %s. Distance: %d meters. The GeoHash Cron Job ran at %s",
-                            label, hash.getLocation().getCoordinates(), distance, LocalDateTime.now())));
-            LOG.info("Email sent successfully for " + label + " to " + recipient);
-        }
-    }
 }

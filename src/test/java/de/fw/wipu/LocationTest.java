@@ -1,9 +1,12 @@
 package de.fw.wipu;
 
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class LocationDistanceTest {
+public class LocationTest {
+
+    private static final Location SCHWABACH = new Location(11.020650, 49.329109);
 
     @Test
     public void testDistance() {
@@ -13,7 +16,7 @@ public class LocationDistanceTest {
         Location munich = new Location(11.5820, 48.1351);
 
         long dist = Location.distance(berlin, munich);
-        
+
         // Distance between Berlin and Munich is roughly 504 km
         assertEquals(504117, dist, 1000); // Allow 1km deviation
     }
@@ -23,4 +26,21 @@ public class LocationDistanceTest {
         Location a = new Location(13.4050, 52.5200);
         assertEquals(0, Location.distance(a, a));
     }
+
+    @Test
+    public void testGraticuleEvaluation() {
+        assertEquals(11, SCHWABACH.getGraticule().getLon());
+        assertEquals(49, SCHWABACH.getGraticule().getLat());
+
+    }
+
+    @Test
+    public void westOfSchwabach() {
+        Location westOfSchwabach = SCHWABACH.west(25);
+        System.out.println("[DEBUG_LOG] Schwabach: " + SCHWABACH.getLon() + ", " + SCHWABACH.getLat());
+        System.out.println("[DEBUG_LOG] West: " + westOfSchwabach.getLon() + ", " + westOfSchwabach.getLat());
+        assertEquals(10, westOfSchwabach.getGraticule().getLon());
+    }
+
+
 }

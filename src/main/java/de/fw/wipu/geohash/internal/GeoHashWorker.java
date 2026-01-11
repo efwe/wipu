@@ -1,5 +1,6 @@
 package de.fw.wipu.geohash.internal;
 
+import de.fw.wipu.BoundingBox;
 import de.fw.wipu.geohash.GeoHash;
 import jakarta.enterprise.context.ApplicationScoped;
 import de.fw.wipu.Location;
@@ -14,6 +15,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class GeoHashWorker {
@@ -21,7 +26,7 @@ public class GeoHashWorker {
     public GeoHash hashPointFor(int lat, int lon, LocalDate date) {
         String djia = djiaFor(lon, date);
         String seed = String.format("%04d-%02d-%02d-%s", date.getYear(), date.getMonthValue(), date.getDayOfMonth(), djia);
-        return new GeoHash(locationFor(lat, lon, seed ), date, djia);
+        return new GeoHash(locationFor(lat, lon, seed), date, djia);
     }
 
     Location locationFor(int lat, int lon, String seed) {
@@ -122,4 +127,34 @@ public class GeoHashWorker {
         double denom = Math.pow(16.0, 16.0);
         return value.doubleValue() / denom;
     }
+
+    /**
+     * From the home-location search all hash-points within the given radius
+     * Note: totally ignores W30 rule - but this is my private homepage still and I'm in central europe :-)
+     * Note: also does not really work for huge radius's
+     *
+     * @param center   - one of my start-points
+     * @param geoHash  - the geohash for that day
+     * @param radiusKm - the radius I'm able to make by bike
+     * @return the hashpoints I could reach in that radius
+     */
+    public Set<Location> hashPointsWithinReach(Location center, Location geoHash, int radiusKm) {
+        Set<Location> result = new HashSet<>();
+        Location centerGraticule = center.getGraticule();
+        double hashLatFraction = geoHash.getLat() - centerGraticule.getLat();
+        double hashLonFraction = geoHash.getLon() - centerGraticule.getLon();
+        // wander around all graticules around the center
+        for (int lonOffset = -1; lonOffset <= 1; lonOffset++) {
+            for (int latOffset = -1; latOffset <= 1; latOffset++) {
+                // apply the pre-calculated fraction
+                Location tmp = new Location(centerGraticule.getLon() + lonOffset + hashLonFraction, centerGraticule.getLat() + latOffset + hashLatFraction);
+                // and test against the radius
+                if (Location.distance(center, tmp) / 1000 <= radiusKm) {
+                    result.add(tmp);
+                }
+            }
+        }
+        return result;
+    }
+
 }
