@@ -18,11 +18,10 @@ public class Location {
 
     @JsonIgnore
     @BsonProperty("coordinates")
-    private final List<Double> coordinates;
+    private List<Double> coordinates;
 
     // No-arg constructor required by MongoDB PojoCodec
     public Location() {
-        this.coordinates = new ArrayList<>();
     }
 
     public Location(Double lon, Double lat) {
@@ -46,17 +45,30 @@ public class Location {
     public List<Double> getCoordinates() {
         return coordinates;
     }
-    
+
+    /**
+     * used by jackson - do not remove :)
+     *
+     * @param coordinates the coordinates to set
+     */
+    public void setCoordinates(List<Double> coordinates) {
+        this.coordinates = coordinates;
+    }
+
     @JsonIgnore
     @BsonIgnore
     public Double getLon() {
         return coordinates.getFirst();
     }
-    
+
+    @JsonIgnore
+    @BsonIgnore
     public Double getLat() {
         return coordinates.get(1);
     }
 
+    @JsonIgnore
+    @BsonIgnore
     public Location getGraticule() {
         if (this.coordinates == null || this.coordinates.size() < 2) {
             return new Location(0.0, 0.0);
@@ -67,6 +79,8 @@ public class Location {
     /**
      * Returns a new Location north of this one by the given distance in kilometers.
      */
+    @JsonIgnore
+    @BsonIgnore
     public Location north(int km) {
         return moveByKilometers(km, 0.0);
     }
@@ -74,6 +88,8 @@ public class Location {
     /**
      * Returns a new Location east of this one by the given distance in kilometers.
      */
+    @JsonIgnore
+    @BsonIgnore
     public Location east(int km) {
         return moveByKilometers(km, 90.0);
     }
@@ -81,6 +97,8 @@ public class Location {
     /**
      * Returns a new Location south of this one by the given distance in kilometers.
      */
+    @JsonIgnore
+    @BsonIgnore
     public Location south(int km) {
         return moveByKilometers(km, 180.0);
     }
@@ -88,6 +106,8 @@ public class Location {
     /**
      * Returns a new Location west of this one by the given distance in kilometers.
      */
+    @JsonIgnore
+    @BsonIgnore
     public Location west(int km) {
         return moveByKilometers(km, 270.0);
     }
@@ -114,7 +134,7 @@ public class Location {
 
         double lat2 = Math.asin(
                 sinLat1 * cosAd +
-                cosLat1 * sinAd * Math.cos(bearing)
+                        cosLat1 * sinAd * Math.cos(bearing)
         );
 
         double lon2 = lon1 + Math.atan2(
