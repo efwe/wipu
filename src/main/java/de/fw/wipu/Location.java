@@ -13,10 +13,6 @@ public class Location {
     private static final double EARTH_RADIUS_METERS = 6_371_000d;
 
     @JsonIgnore
-    @BsonProperty("type")
-    private final String type = "Point";
-
-    @JsonIgnore
     @BsonProperty("coordinates")
     private List<Double> coordinates;
 
@@ -35,11 +31,11 @@ public class Location {
         if (coordinates == null || coordinates.size() < 2) {
             return null;
         }
-        return new Double[]{coordinates.get(1), coordinates.get(0)};
+        return new Double[]{coordinates.getLast(), coordinates.getFirst()};
     }
 
     public String getType() {
-        return type;
+        return "Point";
     }
 
     public List<Double> getCoordinates() {
@@ -64,7 +60,7 @@ public class Location {
     @JsonIgnore
     @BsonIgnore
     public Double getLat() {
-        return coordinates.get(1);
+        return coordinates.getLast();
     }
 
     @JsonIgnore
@@ -73,7 +69,25 @@ public class Location {
         if (this.coordinates == null || this.coordinates.size() < 2) {
             return new Location(0.0, 0.0);
         }
-        return new Location(Math.floor(this.coordinates.get(0)), Math.floor(this.coordinates.get(1)));
+        return new Location(Math.floor(this.coordinates.getFirst()), Math.floor(this.coordinates.getLast()));
+    }
+
+    @JsonIgnore
+    @BsonIgnore
+    public Double getLatFraction() {
+        if (this.coordinates == null || this.coordinates.size() < 2) {
+            return 0.0;
+        }
+        return this.coordinates.getLast() - Math.floor(this.coordinates.getLast());
+    }
+
+    @JsonIgnore
+    @BsonIgnore
+    public Double getLonFraction() {
+        if (this.coordinates == null || this.coordinates.size() < 2) {
+            return 0.0;
+        }
+        return this.coordinates.getFirst() - Math.floor(this.coordinates.getFirst());
     }
 
     /**

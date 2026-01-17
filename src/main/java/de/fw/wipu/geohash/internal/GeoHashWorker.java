@@ -1,27 +1,69 @@
 package de.fw.wipu.geohash.internal;
 
-import de.fw.wipu.BoundingBox;
+import de.fw.wipu.Location;
+import de.fw.wipu.geohash.Forecast;
 import de.fw.wipu.geohash.GeoHash;
 import jakarta.enterprise.context.ApplicationScoped;
-import de.fw.wipu.Location;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.LocalDate;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static java.time.DayOfWeek.*;
+
 @ApplicationScoped
 public class GeoHashWorker {
+
+    /**
+     * For every location east of Longitude -30 (Europe, Africa, Asia, and Australia),
+     * use the Dow opening from the previous day — even if a new one becomes available
+     * partway through the day.
+     */
+    List<Forecast> forecast(LocalDateTime now) {
+        List<Forecast> result = new ArrayList<>();
+        ZoneId assumedNowZone = ZoneId.of("Europe/Berlin");
+        ZoneId nyZone = ZoneId.of("America/New_York");
+
+        ZonedDateTime nowInEurope = now.atZone(assumedNowZone);
+        ZonedDateTime nycTime = nowInEurope.withZoneSameInstant(nyZone);
+
+        LocalTime nyLocalTime = nycTime.toLocalTime();
+        LocalTime nyOpen = LocalTime.of(9, 30);
+
+
+        if (SATURDAY.equals(now.getDayOfWeek())) {
+            result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(1))));
+            result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(2))));
+        } else if (SUNDAY.equals(now.getDayOfWeek())) {
+            result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(1))));
+        } else if (nyLocalTime.isAfter(nyOpen) && !List.of(SATURDAY, SUNDAY).contains(now.getDayOfWeek())) { // at or after 09:30 NYC time during weekdays
+            // we can ask for the forecast of tomorrow
+            GeoHash tomorrow = hashPointFor(49, 11, now.toLocalDate().plusDays(1));
+            result.add(new Forecast(tomorrow));
+            // special Friday handling - also add Sunday and Monday
+            if (now.getDayOfWeek() == FRIDAY) {
+                result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(2))));
+                result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(3))));
+            }
+        }
+
+        return result;
+    }
+
+    public List<Forecast> forecast() {
+        return forecast(LocalDateTime.now());
+    }
+
 
     public GeoHash hashPointFor(int lat, int lon, LocalDate date) {
         String djia = djiaFor(lon, date);

@@ -33,6 +33,21 @@ public class GeoHashResource {
                 .build();
     }
 
+    /**
+     * This is not a general-purpose API - it is specially implemented for my site.
+     * The following assumptions are made:
+     * <ul>
+     *     <li>we are west of -30</li>
+     *     <li>the request is made from CET, arrives at CET and assumes that the result is good for CET :)</li>
+     * </ul>
+     * @return a list of geohashes which is a: empty if no forecast is available b: contains one geohash if the forecast is available on a weekday c: up to 3 points if the request is made on Friday afternoon
+     */
+    @GET
+    @Path("/forecast")
+    public Response forecast() {
+        return Response.ok(geoHashWorker.forecast()).build();
+    }
+
     @GET
     @Path("/{lat}/{lon}/{date}")
     public Response geoHash(

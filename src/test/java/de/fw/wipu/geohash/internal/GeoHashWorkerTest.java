@@ -1,11 +1,14 @@
 package de.fw.wipu.geohash.internal;
 
 import de.fw.wipu.Location;
+import de.fw.wipu.geohash.Forecast;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +24,32 @@ public class GeoHashWorkerTest {
 
     // As soon as our worker gets more dependencies we will switch to @QuarkusTest
     GeoHashWorker geoHashWorker = new GeoHashWorker();
+
+    @Test
+    public void testForecast20260114At1430NoResult() {
+        LocalDateTime dateTime = LocalDateTime.of(2026, 1, 14, 12, 30)
+                .atZone(ZoneId.of("Europe/Paris"))
+                .toLocalDateTime();
+        List<Forecast> result = geoHashWorker.forecast(dateTime);
+        assertThat(result.size(), is(0));
+    }
+
+    @Test
+    public void testForecast20260114At1600OneResult() {
+        LocalDateTime dateTime = LocalDateTime.of(2026, 1, 14, 16, 0);
+        List<Forecast> result = geoHashWorker.forecast(dateTime);
+        assertThat(result.size(), is(1));
+        assertThat(result.getFirst().latFraction(),is(closeTo(0.89864,0.0001)));
+        assertThat(result.getFirst().lonFraction(),is(closeTo(0.96908,0.0001)));
+    }
+
+    @Test
+    public void testForecast20260116At1730ThreeResults() {
+        LocalDateTime dateTime = LocalDateTime.of(2026, 1, 16, 17, 30);
+        List<Forecast> result = geoHashWorker.forecast(dateTime);
+        assertThat(result.size(), is(3));
+    }
+
 
     @Test
     public void testDjiaFor20251217() {
