@@ -13,6 +13,7 @@ val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
 dependencies {
+    implementation("io.quarkus:quarkus-cache")
     implementation("io.quarkus:quarkus-security")
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("io.quarkus:quarkus-mongodb-client")

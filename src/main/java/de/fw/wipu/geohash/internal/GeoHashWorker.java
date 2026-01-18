@@ -3,6 +3,8 @@ package de.fw.wipu.geohash.internal;
 import de.fw.wipu.Location;
 import de.fw.wipu.geohash.Forecast;
 import de.fw.wipu.geohash.GeoHash;
+import io.quarkus.cache.CacheResult;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.math.BigInteger;
@@ -66,7 +68,9 @@ public class GeoHashWorker {
 
 
     public GeoHash hashPointFor(int lat, int lon, LocalDate date) {
-        String djia = djiaFor(lon, date);
+        // Apply 30W rule: For longitudes <= -30, use previous day's DJIA for dates on/after 2008-05-27
+        LocalDate effectiveDate = apply30WRule(lon, date);
+        String djia = djiaFor(effectiveDate);
         String seed = String.format("%04d-%02d-%02d-%s", date.getYear(), date.getMonthValue(), date.getDayOfMonth(), djia);
         return new GeoHash(locationFor(lat, lon, seed), date, djia);
     }
@@ -91,15 +95,14 @@ public class GeoHashWorker {
      * first djia implementation with geo.crox.net
      * Note: bank-holidays missing
      */
-    String djiaFor(int lon, LocalDate date) {
+    @CacheResult(cacheName = "djia")
+    String djiaFor(LocalDate date) {
         if (date == null) throw new IllegalArgumentException("date must not be null");
 
-        // Apply 30W rule: For longitudes <= -30, use previous day's DJIA for dates on/after 2008-05-27
-        LocalDate effectiveDate = apply30WRule(lon, date);
-
         // Use the public geohashing DJIA proxy service
-        String url = String.format("http://geo.crox.net/djia/%04d-%02d-%02d", effectiveDate.getYear(), effectiveDate.getMonthValue(), effectiveDate.getDayOfMonth());
+        String url = String.format("http://geo.crox.net/djia/%04d-%02d-%02d", date.getYear(), date.getMonthValue(), date.getDayOfMonth());
 
+        Log.infof("Fetching DJIA from %s for date %s (effective date: %s)", url, date, date);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -111,6 +114,7 @@ public class GeoHashWorker {
                 .build()) {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
+                Log.warnf("Failed to fetch DJIA: HTTP %d for URL %s", response.statusCode(), url);
                 throw new IllegalStateException("Failed to fetch DJIA: HTTP " + response.statusCode());
             }
             String body = response.body();
@@ -123,11 +127,14 @@ public class GeoHashWorker {
             if (!value.matches("^[0-9]+\\.[0-9]+$")) {
                 throw new IllegalStateException("Unexpected DJIA format: '" + value + "'");
             }
+            Log.debugf("Successfully fetched DJIA value: %s for date %s", value, date);
             return value;
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
+            Log.errorf(ie, "Interrupted while fetching DJIA for date %s", date);
             throw new IllegalStateException("Interrupted while fetching DJIA", ie);
         } catch (Exception e) {
+            Log.errorf(e, "Error retrieving DJIA from geo.crox.net for date %s", date);
             throw new IllegalStateException("Error retrieving DJIA from geo.crox.net", e);
         }
     }

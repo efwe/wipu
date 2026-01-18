@@ -53,7 +53,7 @@ public class GeoHashWorkerTest {
 
     @Test
     public void testDjiaFor20251217() {
-        String djia = geoHashWorker.djiaFor(20, LocalDate.of(2025, 12, 17));
+        String djia = geoHashWorker.djiaFor(LocalDate.of(2025, 12, 17));
         assertThat(djia, is("48380.17"));
     }
 
