@@ -1,9 +1,18 @@
 package de.fw.wipu.track;
 
 import de.fw.wipu.Location;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.types.ObjectId;
+
 import java.time.LocalDateTime;
 
 public class TrackPoint {
+
+    @BsonId
+    private ObjectId id;
+
+    private ObjectId trackId;
+
     private Location location;
     private LocalDateTime time;
     private double elevation;
@@ -15,6 +24,22 @@ public class TrackPoint {
         this.location = location;
         this.time = time;
         this.elevation = elevation;
+    }
+
+    public ObjectId getId() {
+        return id;
+    }
+
+    public void setId(ObjectId id) {
+        this.id = id;
+    }
+
+    public ObjectId getTrackId() {
+        return trackId;
+    }
+
+    public void setTrackId(ObjectId trackId) {
+        this.trackId = trackId;
     }
 
     public Location getLocation() {
@@ -39,5 +64,18 @@ public class TrackPoint {
 
     public void setElevation(double elevation) {
         this.elevation = elevation;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TrackPoint that = (TrackPoint) o;
+        return java.util.Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
     }
 }

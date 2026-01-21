@@ -1,6 +1,9 @@
 package de.fw.wipu.track;
 
 import de.fw.wipu.BoundingBox;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.types.ObjectId;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -8,12 +11,33 @@ import java.util.List;
  * Model for a GPS track.
  */
 public class Track {
+
+    @BsonId
+    private ObjectId id;
+
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private Double distance;
     private BoundingBox boundingBox;
     private List<TrackPoint> trackPoints;
 
     public Track() {
+    }
+
+    public Double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Double distance) {
+        this.distance = distance;
+    }
+
+    public ObjectId getId() {
+        return id;
+    }
+
+    public void setId(ObjectId id) {
+        this.id = id;
     }
 
     public LocalDateTime getStartTime() {
@@ -46,5 +70,18 @@ public class Track {
 
     public void setTrackPoints(List<TrackPoint> trackPoints) {
         this.trackPoints = trackPoints;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Track track = (Track) o;
+        return java.util.Objects.equals(id, track.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
     }
 }
