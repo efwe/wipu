@@ -24,6 +24,7 @@ dependencies {
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-scheduler")
     implementation("io.quarkus:quarkus-mailer")
+    implementation("io.jenetics:jpx:3.2.0")
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
 }
