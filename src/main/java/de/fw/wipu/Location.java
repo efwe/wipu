@@ -191,4 +191,16 @@ public class Location {
         double c = 2 * Math.atan2(Math.sqrt(aVal), Math.sqrt(1 - aVal));
         return Math.round(EARTH_RADIUS_METERS * c);
     }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Location location = (Location) o;
+        return java.util.Objects.equals(coordinates, location.coordinates);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(coordinates);
+    }
 }
