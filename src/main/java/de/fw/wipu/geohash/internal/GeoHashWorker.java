@@ -67,6 +67,13 @@ public class GeoHashWorker {
     }
 
 
+    public Location globalHash(double latFraction, double lonFraction) {
+        double resultLat = latFraction * 180 - 90;
+        double resultLon = lonFraction * 360 - 180;
+        return new Location(resultLon, resultLat);
+    }
+
+
     public GeoHash hashPointFor(int lat, int lon, LocalDate date) {
         // Apply 30W rule: For longitudes <= -30, use previous day's DJIA for dates on/after 2008-05-27
         LocalDate effectiveDate = apply30WRule(lon, date);
@@ -92,17 +99,19 @@ public class GeoHashWorker {
     }
 
     /**
-     * first djia implementation with geo.crox.net
+     * call djia implementation at geo.crox.net
      * Note: bank-holidays missing
+     * @param effectiveDate - the date for which the djia should be returned (No additional W30 calculation)
+     * @return djia value for given date
      */
     @CacheResult(cacheName = "djia")
-    String djiaFor(LocalDate date) {
-        if (date == null) throw new IllegalArgumentException("date must not be null");
+    String djiaFor(LocalDate effectiveDate) {
+        if (effectiveDate == null) throw new IllegalArgumentException("date must not be null");
 
         // Use the public geohashing DJIA proxy service
-        String url = String.format("http://geo.crox.net/djia/%04d-%02d-%02d", date.getYear(), date.getMonthValue(), date.getDayOfMonth());
+        String url = String.format("http://geo.crox.net/djia/%04d-%02d-%02d", effectiveDate.getYear(), effectiveDate.getMonthValue(), effectiveDate.getDayOfMonth());
 
-        Log.infof("Fetching DJIA from %s for date %s (effective date: %s)", url, date, date);
+        Log.infof("Fetching DJIA from %s for date %s (effective date: %s)", url, effectiveDate, effectiveDate);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -127,14 +136,14 @@ public class GeoHashWorker {
             if (!value.matches("^[0-9]+\\.[0-9]+$")) {
                 throw new IllegalStateException("Unexpected DJIA format: '" + value + "'");
             }
-            Log.debugf("Successfully fetched DJIA value: %s for date %s", value, date);
+            Log.debugf("Successfully fetched DJIA value: %s for date %s", value, effectiveDate);
             return value;
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
-            Log.errorf(ie, "Interrupted while fetching DJIA for date %s", date);
+            Log.errorf(ie, "Interrupted while fetching DJIA for date %s", effectiveDate);
             throw new IllegalStateException("Interrupted while fetching DJIA", ie);
         } catch (Exception e) {
-            Log.errorf(e, "Error retrieving DJIA from geo.crox.net for date %s", date);
+            Log.errorf(e, "Error retrieving DJIA from geo.crox.net for date %s", effectiveDate);
             throw new IllegalStateException("Error retrieving DJIA from geo.crox.net", e);
         }
     }

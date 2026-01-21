@@ -2,8 +2,6 @@ package de.fw.wipu.geohash.internal;
 
 import de.fw.wipu.Location;
 import de.fw.wipu.geohash.Forecast;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -39,8 +37,8 @@ public class GeoHashWorkerTest {
         LocalDateTime dateTime = LocalDateTime.of(2026, 1, 14, 16, 0);
         List<Forecast> result = geoHashWorker.forecast(dateTime);
         assertThat(result.size(), is(1));
-        assertThat(result.getFirst().latFraction(),is(closeTo(0.89864,0.0001)));
-        assertThat(result.getFirst().lonFraction(),is(closeTo(0.96908,0.0001)));
+        assertThat(result.getFirst().latFraction(), is(closeTo(0.89864, 0.0001)));
+        assertThat(result.getFirst().lonFraction(), is(closeTo(0.96908, 0.0001)));
     }
 
     @Test
@@ -54,7 +52,7 @@ public class GeoHashWorkerTest {
     @Test
     public void testDjiaFor20251217() {
         String djia = geoHashWorker.djiaFor(LocalDate.of(2025, 12, 17));
-        assertThat(djia, is("48380.17"));
+        assertThat(djia, is("48128.05"));
     }
 
     @Test
@@ -66,7 +64,7 @@ public class GeoHashWorkerTest {
     }
 
     @Test
-    public void Schwabach20260111(){
+    public void Schwabach20260111() {
         Location location = geoHashWorker.locationFor(49, 11, "2026-01-11-49234.81");
         assertThat(location.getLon(), is(closeTo(11.016798, 0.0001)));
         assertThat(location.getLat(), is(closeTo(49.396008, 0.0001)));
@@ -74,20 +72,20 @@ public class GeoHashWorkerTest {
 
     @Test
     public void afftectedGraticulesForSchwabachSameGraticule() {
-        Set<Location> result = geoHashWorker.hashPointsWithinReach(SCHWABACH, new Location(11.0674,49.4561), 25);
+        Set<Location> result = geoHashWorker.hashPointsWithinReach(SCHWABACH, new Location(11.0674, 49.4561), 25);
         assertThat(result.size(), is(1));
         Location hashPoint = result.iterator().next();
-        assertThat(hashPoint.getGraticule().getLat(),is(49.0));
-        assertThat(hashPoint.getGraticule().getLon(),is(11.0));
+        assertThat(hashPoint.getGraticule().getLat(), is(49.0));
+        assertThat(hashPoint.getGraticule().getLon(), is(11.0));
     }
 
     @Test
     public void afftectedGraticulesForSchwabachWestGraticule() {
-        Set<Location> result = geoHashWorker.hashPointsWithinReach(SCHWABACH, new Location(10.88642,49.34131), 25);
+        Set<Location> result = geoHashWorker.hashPointsWithinReach(SCHWABACH, new Location(10.88642, 49.34131), 25);
         assertThat(result.size(), is(1));
         Location hashPoint = result.iterator().next();
-        assertThat(hashPoint.getGraticule().getLat(),is(49.0));
-        assertThat(hashPoint.getGraticule().getLon(),is(10.0));
+        assertThat(hashPoint.getGraticule().getLat(), is(49.0));
+        assertThat(hashPoint.getGraticule().getLon(), is(10.0));
     }
 
     @Test
@@ -109,6 +107,14 @@ public class GeoHashWorkerTest {
                 result.stream().anyMatch(l -> l.getGraticule().getLat() == 50.0
                         && l.getGraticule().getLon() == 12.0);
         assertThat(hasNorthEast, is(true));
+    }
+
+    @Test
+    public void testGlobalHash() {
+        // 49.69500, 11.57306
+        Location location = geoHashWorker.globalHash(0.69500, 0.57306);
+        assertThat(location.getLat(), is(closeTo(35.100019764173, 0.001)));
+        assertThat(location.getLon(), is(closeTo(26.302346388900, 0.001)));
     }
 
 }

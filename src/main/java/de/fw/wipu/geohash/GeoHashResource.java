@@ -1,5 +1,6 @@
 package de.fw.wipu.geohash;
 
+import de.fw.wipu.Location;
 import de.fw.wipu.geohash.internal.GeoHashCronJob;
 import de.fw.wipu.geohash.internal.GeoHashWorker;
 import jakarta.annotation.security.RolesAllowed;
@@ -46,6 +47,14 @@ public class GeoHashResource {
     @Path("/forecast")
     public Response forecast() {
         return Response.ok(geoHashWorker.forecast()).build();
+    }
+
+    @GET
+    @Path("/global")
+    public Response global() {
+        GeoHash geoHash = geoHashWorker.hashPointFor(49, 11, LocalDate.now());
+        Location location = geoHashWorker.globalHash(geoHash.getLocation().getLatFraction(), geoHash.getLocation().getLonFraction());
+        return Response.ok(location).build();
     }
 
     @GET
