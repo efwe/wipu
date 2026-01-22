@@ -6,6 +6,7 @@ import de.fw.wipu.track.Track;
 import de.fw.wipu.track.TrackPoint;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -48,8 +49,8 @@ public class TrackServiceTest {
         // Save
         Track savedTrack = trackService.save(track).await().indefinitely();
         assertThat(savedTrack.getId(), is(notNullValue()));
-        assertThat(savedTrack.getTrackPoints().get(0).getTrackId(), is(savedTrack.getId()));
-        assertThat(savedTrack.getTrackPoints().get(0).getId(), is(notNullValue()));
+        assertThat(savedTrack.getTrackPoints().getFirst().getTrackId(), is(new ObjectId(savedTrack.getId())));
+        assertThat(savedTrack.getTrackPoints().getFirst().getId(), is(notNullValue()));
 
         // Retrieve
         Track retrievedTrack = trackService.findTrack(savedTrack.getId()).await().indefinitely();

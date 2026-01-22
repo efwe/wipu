@@ -51,10 +51,10 @@ class TrackModelTest {
 
         BoundingBox bbox = new BoundingBox(sw, ne, se, nw);
 
-        assertThat(bbox.getSW(), equalTo(sw));
-        assertThat(bbox.getNE(), equalTo(ne));
-        assertThat(bbox.getSE(), equalTo(se));
-        assertThat(bbox.getNW(), equalTo(nw));
+        assertThat(bbox.SW(), equalTo(sw));
+        assertThat(bbox.NE(), equalTo(ne));
+        assertThat(bbox.SE(), equalTo(se));
+        assertThat(bbox.NW(), equalTo(nw));
     }
 
     @Test
@@ -64,11 +64,11 @@ class TrackModelTest {
 
         BoundingBox bbox = new BoundingBox(sw, ne);
 
-        assertThat(bbox.getSW(), equalTo(sw));
-        assertThat(bbox.getNE(), equalTo(ne));
-        assertThat(bbox.getSE().getLon(), equalTo(11.1));
-        assertThat(bbox.getSE().getLat(), equalTo(49.0));
-        assertThat(bbox.getNW().getLon(), equalTo(11.0));
-        assertThat(bbox.getNW().getLat(), equalTo(49.1));
+        assertThat(bbox.SW(), equalTo(sw));
+        assertThat(bbox.NE(), equalTo(ne));
+        assertThat(bbox.SE().getLon(), equalTo(11.1));
+        assertThat(bbox.SE().getLat(), equalTo(49.0));
+        assertThat(bbox.NW().getLon(), equalTo(11.0));
+        assertThat(bbox.NW().getLat(), equalTo(49.1));
     }
 }

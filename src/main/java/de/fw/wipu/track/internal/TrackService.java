@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * All the things Mongo persistence of Tracks
- * Motto: I don't use jenetics.jpx and I don't bother with actual GPX at all - all we know is our Track-model 
+ * Motto: I don't use jenetics.jpx and I don't bother with actual GPX at all - all we know is our Track-model
  */
 @ApplicationScoped
 public class TrackService {
@@ -28,16 +28,14 @@ public class TrackService {
 
     public Uni<Track> save(Track track) {
         if (track.getId() == null) {
-            track.setId(new ObjectId());
+            track.setId(new ObjectId().toHexString());
         }
 
         List<TrackPoint> points = track.getTrackPoints();
         if (points != null && !points.isEmpty()) {
             points.forEach(p -> {
-                if (p.getId() == null) {
-                    p.setId(new ObjectId());
-                }
-                p.setTrackId(track.getId());
+                p.setId(new ObjectId().toHexString());
+                p.setTrackId(new ObjectId(track.getId()));
             });
         }
 
@@ -51,9 +49,13 @@ public class TrackService {
                 .replaceWith(track);
     }
 
-    public Uni<Track> findTrack(ObjectId id) {
-        Uni<Track> trackUni = getTrackCollection().find(Filters.eq("_id", id)).toUni();
-        Uni<List<TrackPoint>> pointsUni = getTrackPointCollection().find(Filters.eq("trackId", id)).collect().asList();
+    public Uni<List<Track>> findAllTracks() {
+        return getTrackCollection().find().collect().asList();
+    }
+
+    public Uni<Track> findTrack(String id) {
+        Uni<Track> trackUni = getTrackCollection().find(Filters.eq("_id", new ObjectId(id))).toUni();
+        Uni<List<TrackPoint>> pointsUni = getTrackPointCollection().find(Filters.eq("trackId", new ObjectId(id))).collect().asList();
 
         return Uni.combine().all().unis(trackUni, pointsUni).asTuple()
                 .map(tuple -> {
@@ -77,6 +79,6 @@ public class TrackService {
     }
 
     private ReactiveMongoCollection<TrackPoint> getTrackPointCollection() {
-        return mongoClient.getDatabase(databaseName).getCollection("TrackPoint", TrackPoint.class);
+        return mongoClient.getDatabase(databaseName).getCollection("trackPoint", TrackPoint.class);
     }
 }

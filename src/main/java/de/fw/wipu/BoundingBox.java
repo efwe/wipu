@@ -1,12 +1,26 @@
 package de.fw.wipu;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
+import org.bson.codecs.pojo.annotations.BsonProperty;
+
 import java.util.Arrays;
 import java.util.List;
 
 public class BoundingBox {
+    @BsonProperty("southEast")
+    @JsonProperty("southEast")
     private Location southEast;
+    @BsonProperty("northEast")
+    @JsonProperty("northEast")
     private Location northEast;
+    @BsonProperty("southWest")
+    @JsonProperty("southWest")
     private Location southWest;
+    @BsonProperty("northWest")
+    @JsonProperty("northWest")
     private Location northWest;
 
     public BoundingBox() {
@@ -75,19 +89,27 @@ public class BoundingBox {
         this.northWest = northWest;
     }
 
-    public Location getSE() {
+    @BsonIgnore
+    @JsonIgnore
+    public Location SE() {
         return southEast;
     }
 
-    public Location getNE() {
+    @BsonIgnore
+    @JsonIgnore
+    public Location NE() {
         return northEast;
     }
 
-    public Location getSW() {
+    @BsonIgnore
+    @JsonIgnore
+    public Location SW() {
         return southWest;
     }
 
-    public Location getNW() {
+    @BsonIgnore
+    @JsonIgnore
+    public Location NW() {
         return northWest;
     }
 

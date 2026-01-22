@@ -34,6 +34,7 @@ public class Location {
         return new Double[]{coordinates.getLast(), coordinates.getFirst()};
     }
 
+    @JsonIgnore
     public String getType() {
         return "Point";
     }
