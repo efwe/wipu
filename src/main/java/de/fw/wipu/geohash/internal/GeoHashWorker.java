@@ -31,31 +31,37 @@ public class GeoHashWorker {
      * use the Dow opening from the previous day — even if a new one becomes available
      * partway through the day.
      */
-    List<Forecast> forecast(LocalDateTime now) {
+    List<Forecast> forecast(ZonedDateTime now) {
         List<Forecast> result = new ArrayList<>();
         ZoneId assumedNowZone = ZoneId.of("Europe/Berlin");
         ZoneId nyZone = ZoneId.of("America/New_York");
 
-        ZonedDateTime nowInEurope = now.atZone(assumedNowZone);
-        ZonedDateTime nycTime = nowInEurope.withZoneSameInstant(nyZone);
+        if (now == null) throw new IllegalArgumentException("now must not be null");
+        if (!assumedNowZone.equals(now.getZone())) {
+            throw new IllegalArgumentException("now must be in zone " + assumedNowZone + " but was " + now.getZone());
+        }
+
+        ZonedDateTime nycTime = now.withZoneSameInstant(nyZone);
 
         LocalTime nyLocalTime = nycTime.toLocalTime();
         LocalTime nyOpen = LocalTime.of(9, 30);
 
+        DayOfWeek europeDow = now.getDayOfWeek();
+        LocalDate europeDate = now.toLocalDate();
 
-        if (SATURDAY.equals(now.getDayOfWeek())) {
-            result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(1))));
-            result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(2))));
-        } else if (SUNDAY.equals(now.getDayOfWeek())) {
-            result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(1))));
-        } else if (nyLocalTime.isAfter(nyOpen) && !List.of(SATURDAY, SUNDAY).contains(now.getDayOfWeek())) { // at or after 09:30 NYC time during weekdays
+        if (SATURDAY.equals(europeDow)) {
+            result.add(new Forecast(hashPointFor(49, 11, europeDate.plusDays(1))));
+            result.add(new Forecast(hashPointFor(49, 11, europeDate.plusDays(2))));
+        } else if (SUNDAY.equals(europeDow)) {
+            result.add(new Forecast(hashPointFor(49, 11, europeDate.plusDays(1))));
+        } else if (nyLocalTime.isAfter(nyOpen) && !List.of(SATURDAY, SUNDAY).contains(europeDow)) { // after 09:30 NYC time during weekdays
             // we can ask for the forecast of tomorrow
-            GeoHash tomorrow = hashPointFor(49, 11, now.toLocalDate().plusDays(1));
+            GeoHash tomorrow = hashPointFor(49, 11, europeDate.plusDays(1));
             result.add(new Forecast(tomorrow));
             // special Friday handling - also add Sunday and Monday
-            if (now.getDayOfWeek() == FRIDAY) {
-                result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(2))));
-                result.add(new Forecast(hashPointFor(49, 11, now.toLocalDate().plusDays(3))));
+            if (europeDow == FRIDAY) {
+                result.add(new Forecast(hashPointFor(49, 11, europeDate.plusDays(2))));
+                result.add(new Forecast(hashPointFor(49, 11, europeDate.plusDays(3))));
             }
         }
 
@@ -63,9 +69,8 @@ public class GeoHashWorker {
     }
 
     public List<Forecast> forecast() {
-        return forecast(LocalDateTime.now());
+        return forecast(ZonedDateTime.now(ZoneId.of("Europe/Berlin")));
     }
-
 
     public Location globalHash(double latFraction, double lonFraction) {
         double resultLat = latFraction * 180 - 90;

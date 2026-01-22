@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ import static org.hamcrest.Matchers.is;
 
 public class GeoHashWorkerTest {
 
+    private static final ZoneId BERLIN = ZoneId.of("Europe/Berlin");
     private static final Location SCHWABACH = new Location(11.020650, 49.329109);
     private static final Location PAPPENHEIM = new Location(10.97461, 48.93548);
 
@@ -25,16 +27,16 @@ public class GeoHashWorkerTest {
 
     @Test
     public void testForecast20260114At1430NoResult() {
-        LocalDateTime dateTime = LocalDateTime.of(2026, 1, 14, 12, 30)
-                .atZone(ZoneId.of("Europe/Paris"))
-                .toLocalDateTime();
+        ZonedDateTime dateTime = LocalDateTime.of(2026, 1, 14, 12, 30)
+                .atZone(BERLIN);
+
         List<Forecast> result = geoHashWorker.forecast(dateTime);
         assertThat(result.size(), is(0));
     }
 
     @Test
     public void testForecast20260114At1600OneResult() {
-        LocalDateTime dateTime = LocalDateTime.of(2026, 1, 14, 16, 0);
+        ZonedDateTime dateTime = LocalDateTime.of(2026, 1, 14, 16, 0).atZone(BERLIN);
         List<Forecast> result = geoHashWorker.forecast(dateTime);
         assertThat(result.size(), is(1));
         assertThat(result.getFirst().latFraction(), is(closeTo(0.89864, 0.0001)));
@@ -43,7 +45,7 @@ public class GeoHashWorkerTest {
 
     @Test
     public void testForecast20260116At1730ThreeResults() {
-        LocalDateTime dateTime = LocalDateTime.of(2026, 1, 16, 17, 30);
+        ZonedDateTime dateTime = LocalDateTime.of(2026, 1, 16, 17, 30).atZone(BERLIN);
         List<Forecast> result = geoHashWorker.forecast(dateTime);
         assertThat(result.size(), is(3));
     }
