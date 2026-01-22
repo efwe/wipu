@@ -67,6 +67,14 @@ public class TrackService {
                 });
     }
 
+    public Uni<Void> deleteTrack(String id) {
+        ObjectId objectId = new ObjectId(id);
+        Uni<Void> deleteTrack = getTrackCollection().deleteOne(Filters.eq("_id", objectId)).replaceWithVoid();
+        Uni<Void> deletePoints = getTrackPointCollection().deleteMany(Filters.eq("trackId", objectId)).replaceWithVoid();
+
+        return Uni.combine().all().unis(deleteTrack, deletePoints).discardItems();
+    }
+
     public Uni<Void> deleteAll() {
         return Uni.combine().all().unis(
                 getTrackCollection().deleteMany(Filters.empty()),

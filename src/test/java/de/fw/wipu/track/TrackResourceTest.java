@@ -144,4 +144,39 @@ class TrackResourceTest {
         Assertions.assertEquals(expectedNode, actualNode);
     }
 
+    @Test
+    void deleteTrack_shouldRemoveTrack() {
+        URL gpxResource = getClass().getClassLoader().getResource("polar_00.gpx");
+        Assertions.assertNotNull(gpxResource);
+        File gpxFile = new File(gpxResource.getFile());
+
+        String metadata = """
+                {"title":"Track to delete","description":"Delete me"}
+                """;
+
+        String trackId = given()
+                .auth().basic(testUsername, testPassword)
+                .multiPart("metadata", metadata, "application/json")
+                .multiPart("gpx", gpxFile, "application/gpx+xml")
+                .when()
+                .post("/tracks")
+                .then()
+                .statusCode(200)
+                .extract().path("id");
+
+        given()
+                .auth().basic(testUsername, testPassword)
+                .when()
+                .delete("/tracks/{id}", trackId)
+                .then()
+                .statusCode(204);
+
+        given()
+                .auth().basic(testUsername, testPassword)
+                .when()
+                .get("/tracks/{id}", trackId)
+                .then()
+                .statusCode(404);
+    }
+
 }

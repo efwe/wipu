@@ -8,8 +8,10 @@ import io.smallrye.mutiny.unchecked.Unchecked;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.bson.types.ObjectId;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +40,13 @@ public class TrackResource {
     @GET
     @Path("/{objectId}")
     public Uni<Track> getTrack(@PathParam("objectId") String objectId) {
-        return trackService.findTrack(objectId);
+
+        if (!ObjectId.isValid(objectId)) {
+            throw new BadRequestException("Invalid ObjectId format");
+        }
+
+        return trackService.findTrack(objectId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Track not found"));
     }
 
     @POST
@@ -62,5 +70,16 @@ public class TrackResource {
                 }))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .flatMap(trackService::save);
+    }
+    @DELETE
+    @Path("/{objectId}")
+    @RolesAllowed("infra")
+    public Uni<Response> deleteTrack(@PathParam("objectId") String objectId) {
+        if (!ObjectId.isValid(objectId)) {
+            throw new BadRequestException("Invalid ObjectId format");
+        }
+
+        return trackService.deleteTrack(objectId)
+                .map(v -> Response.noContent().build());
     }
 }
