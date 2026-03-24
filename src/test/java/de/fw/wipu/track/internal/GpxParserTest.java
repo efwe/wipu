@@ -69,9 +69,7 @@ class GpxParserTest {
 
         assertThat(gpx, notNullValue());
 
-        // Distance assertion
         Length distance = parser.getDistance(gpx);
-        // Note: Polar homepage was more pessimistic with 3.8km gpx.studio says 4.1km - so altogether 4013m is good enough:)
         assertThat(distance.doubleValue(), closeTo(55989, 10.0));
 
         BoundingBox bbox = parser.getBoundingBox(gpx);

@@ -1,0 +1,11 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        mavenLocal()
+    }
+    plugins {
+        id(settings.getProperty('quarkusPluginId')) version settings.getProperty('quarkusPluginVersion')
+    }
+}
+rootProject.name = 'wipu'
